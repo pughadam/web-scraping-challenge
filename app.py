@@ -1,6 +1,8 @@
 
 # Import our pymongo library, which lets us connect our Flask app to our Mongo database.
-import pymongo
+from flask import Flask, render_template
+from flask_pymongo import PyMongo
+import scrape_mars
 
 # Create an instance of our Flask app.
 app = Flask(__name__)
@@ -17,30 +19,21 @@ db = client.team_db
 # Drops collection if available to remove duplicates
 db.team.drop()
 
-# Creates a collection in the database and inserts two documents
-db.team.insert_many(
-    [
-        {
-            'player': 'Jessica',
-            'position': 'Point Guard'
-        },
-        {
-            'player': 'Mark',
-            'position': 'Center'
-        }
-    ]
-)
 
-
-# Set route
+# Set route to MongoDB and pass the index.html to display the data
 @app.route('/')
 def index():
-    # Store the entire team collection in a list
-    teams = list(db.team.find())
-    print(teams)
+    mars = mongo.db.mars.find_one()
+    return render_template("index.html", mars=mars)
+
+@app.route('/')
+def scrapper():
+    mars = mongo.db.mars_data
+    mars_data = scrape_mars.scrape_all()
+    mars.update({}, mars_data, upsert=True)
 
     # Return the template with the teams list passed in
-    return render_template('index.html', teams=teams)
+    return "Successful Scrape"
 
 
 if __name__ == "__main__":
